@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<!-- saved from url=(0028)https://www.cfahueytown.com/ -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script data-hosted-proxy="url-rewriter">
+(function() {
+  // Target proxy URL - all matching requests will be rewritten to this base
+  var PROXY_BASE = "https://01s6d1gfsy-8080.hosted.obvious.ai";
+  
+  // Regex to match E2B sandbox URLs: https://PORT-sandboxid.e2b.app or .e2b.dev
+  var E2B_URL_PATTERN = /https?:\/\/(\d+)-[a-z0-9]+\.e2b\.(app|dev)/gi;
+  
+  // Regex to match localhost URLs: http://localhost:PORT or http://127.0.0.1:PORT
+  var LOCALHOST_URL_PATTERN = /https?:\/\/(localhost|127\.0\.0\.1):(\d+)/gi;
+
+  /**
+   * Rewrite a URL if it matches our patterns and port.
+   * Only rewrites URLs that match port 8080 to avoid breaking other services.
+   */
+  function rewriteUrl(url) {
+    if (typeof url !== "string") return url;
+    
+    // Extract port from URL to check if it matches our target port
+    var portMatch = url.match(/:(\d+)/);
+    if (portMatch && parseInt(portMatch[1]) === 8080) {
+      // Replace E2B and localhost URLs with our proxy URL
+      return url.replace(E2B_URL_PATTERN, PROXY_BASE).replace(LOCALHOST_URL_PATTERN, PROXY_BASE);
+    }
+    return url;
+  }
+
+  // === Monkeypatch fetch() ===
+  var originalFetch = window.fetch;
+  window.fetch = function(input, init) {
+    if (typeof input === "string") {
+      input = rewriteUrl(input);
+    } else if (input instanceof Request) {
+      var newUrl = rewriteUrl(input.url);
+      if (newUrl !== input.url) {
+        input = new Request(newUrl, input);
+      }
+    }
+    return originalFetch.call(this, input, init);
+  };
+
+  // === Monkeypatch XMLHttpRequest.open() ===
+  var originalXhrOpen = XMLHttpRequest.prototype.open;
+  XMLHttpRequest.prototype.open = function(method, url) {
+    arguments[1] = rewriteUrl(url);
+    return originalXhrOpen.apply(this, arguments);
+  };
+
+  // === Intercept form submissions ===
+  document.addEventListener("submit", function(event) {
+    var form = event.target;
+    if (form.tagName === "FORM" && form.action) {
+      form.action = rewriteUrl(form.action);
+    }
+  }, true); // Use capture phase to intercept before other handlers
+
+})();
+</script>
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chick-fil-A Hueytown — Now Hiring</title>
+  <meta name="description" content="Chick-fil-A is coming to Hueytown, Alabama. Join the founding team.">
+  <link rel="preconnect" href="https://fonts.googleapis.com/">
+  <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red:       #E51636;
+      --red-dark:  #C01230;
+      --charcoal:  #2D2926;
+      --cream:     #FAF9F7;
+      --cream-mid: #F5F1EB;
+      --white:     #FFFFFF;
+      --text-body: #3D3935;
+      --text-muted:#7A7570;
+      --font-serif: 'Playfair Display', Georgia, serif;
+      --font-sans:  'Inter', system-ui, sans-serif;
+      --max: 1160px;
+      --radius: 12px;
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-sans);
+      background: var(--white);
+      color: var(--charcoal);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(255,255,255,0.96);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(0,0,0,0.07);
+      padding: 0 32px;
+      height: 68px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-logo img { height: 46px; width: auto; display: block; }
+    .nav-cta {
+      background: var(--red);
+      color: #fff;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      text-decoration: none;
+      padding: 10px 22px;
+      border-radius: 100px;
+      transition: background 0.2s;
+    }
+    .nav-cta:hover { background: var(--red-dark); }
+
+    /* ── HERO ── */
+    .hero {
+      margin-top: 68px;
+      position: relative;
+      height: calc(100vh - 68px);
+      min-height: 580px;
+      max-height: 860px;
+      
+      display: flex; align-items: center;
+    }
+    .hero-img {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      object-position: center 20%;
+    }
+    .hero-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(
+        to bottom,
+        rgba(0,0,0,0.08) 0%,
+        rgba(0,0,0,0.18) 40%,
+        rgba(0,0,0,0.72) 100%
+      );
+    }
+    \.hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 760px;
+      padding: 88px 32px 88px;
+    }
+    
+    \.hero-content h1 {
+      font-size: clamp(38px, 5vw, 60px);
+      line-height: 1.06;
+      letter-spacing: -0.02em;
+      margin-bottom: 16px;
+      text-shadow: 0 6px 28px rgba(0,0,0,0.35);
+    }
+    @media (max-height: 720px) {
+      .hero-content { padding-top: 80px; padding-bottom: 56px; }
+    }
+
+    .hero-content h1 {
+      font-size: clamp(40px, 5vw, 64px);
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      margin-bottom: 16px;
+    }
+    .hero-sub { max-width: 560px; }
+    @media (max-width: 520px) {
+      .hero-content { padding: 0 22px 64px; }
+      .hero-content h1 { font-size: 38px; }
+      .hero-sub { max-width: 560px; }
+    }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
+    .hero h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(42px, 6vw, 80px);
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      max-width: 720px;
+      margin-bottom: 24px;
+    }
+    .hero h1 em { font-style: italic; color: rgba(255,255,255,0.85); }
+    .hero-sub { max-width: 560px; }
+    .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; }
+    .btn-primary {
+      background: var(--red);
+      color: #fff;
+      font-family: var(--font-sans);
+      font-size: 14px; font-weight: 600;
+      letter-spacing: 0.03em;
+      text-decoration: none;
+      padding: 14px 28px;
+      border-radius: 100px;
+      transition: background 0.2s, transform 0.15s;
+      display: inline-block;
+    }
+    .btn-primary:hover { background: var(--red-dark); transform: translateY(-1px); }
+    .btn-ghost {
+      background: rgba(255,255,255,0.15);
+      border: 1.5px solid rgba(255,255,255,0.5);
+      color: #fff;
+      font-family: var(--font-sans);
+      font-size: 14px; font-weight: 500;
+      text-decoration: none;
+      padding: 13px 28px;
+      border-radius: 100px;
+      backdrop-filter: blur(8px);
+      transition: background 0.2s;
+      display: inline-block;
+    }
+    .btn-ghost:hover { background: rgba(255,255,255,0.25); }
+
+    /* ── TICKER ── */
+    .ticker {
+      background: var(--red);
+      color: #fff;
+      overflow: hidden;
+      padding: 14px 0;
+      white-space: nowrap;
+    }
+    .ticker-inner {
+      display: inline-flex; gap: 0;
+      animation: ticker 28s linear infinite;
+    }
+    .ticker-item {
+      font-size: 12px; font-weight: 600;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      padding: 0 40px;
+      display: inline-flex; align-items: center; gap: 16px;
+    }
+    .ticker-item::after { content: '✦'; opacity: 0.6; font-size: 8px; }
+    @keyframes ticker { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+
+    /* ── SECTION SHARED ── */
+    section { padding: 100px 32px; }
+    .inner { max-width: var(--max); margin: 0 auto; }
+    .section-label {
+      font-size: 11px; font-weight: 600;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--red);
+      margin-bottom: 16px;
+    }
+    .section-title {
+      font-family: var(--font-serif);
+      font-size: clamp(32px, 4vw, 52px);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      color: var(--charcoal);
+      margin-bottom: 20px;
+    }
+    .section-title em { font-style: italic; }
+    .section-body {
+      font-size: 17px; line-height: 1.7;
+      color: var(--text-body);
+      max-width: 600px;
+    }
+
+    /* ── OPERATOR SECTION ── */
+    .operator { background: var(--cream); }
+    .operator-grid {
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      gap: 80px;
+      align-items: center;
+    }
+    .operator-photo-wrap {
+      position: relative;
+    }
+    .operator-photo {
+      width: 100%;
+      aspect-ratio: 3/4;
+      object-fit: cover;
+      object-position: center top;
+      border-radius: 16px;
+      display: block;
+    }
+    .operator-badge {
+      position: absolute;
+      bottom: -20px; right: -20px;
+      background: var(--red);
+      color: #fff;
+      padding: 18px 22px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      line-height: 1.5;
+      box-shadow: 0 8px 24px rgba(229,22,54,0.35);
+    }
+    .operator-badge strong { display: block; font-size: 15px; letter-spacing: 0; text-transform: none; font-weight: 700; }
+    .operator-content { padding-right: 20px; }
+    .operator-quote {
+      font-family: var(--font-serif);
+      font-size: clamp(22px, 2.5vw, 30px);
+      font-style: italic;
+      line-height: 1.45;
+      color: var(--charcoal);
+      margin: 28px 0;
+      padding-left: 24px;
+      border-left: 3px solid var(--red);
+    }
+    .operator-body {
+      font-size: 16px; line-height: 1.75;
+      color: var(--text-body);
+      margin-bottom: 16px;
+    }
+    .press-link {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 13px; font-weight: 500;
+      color: var(--red);
+      text-decoration: none;
+      margin-top: 20px;
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.2s;
+    }
+    .press-link:hover { border-color: var(--red); }
+    .press-link svg { width: 14px; height: 14px; }
+
+    /* ── CULTURE SECTION ── */
+    .culture { background: var(--white); }
+    .culture-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      margin-top: 56px;
+    }
+    .culture-photo-tall {
+      grid-row: span 2;
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .culture-photo-tall img {
+      width: 100%; height: 100%;
+      object-fit: cover; display: block;
+    }
+
+    .culture-cards-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .culture-cards-stack .culture-card {
+      margin: 0;
+    }
+    .culture-card {
+      background: var(--cream);
+      border-radius: var(--radius);
+      padding: 36px;
+      display: flex; flex-direction: column; justify-content: flex-end;
+    }
+    .culture-card h3 {
+      font-family: var(--font-serif);
+      font-size: 22px; font-weight: 700;
+      color: var(--charcoal);
+      margin-bottom: 10px;
+    }
+    .culture-card p {
+      font-size: 15px; line-height: 1.65;
+      color: var(--text-body);
+    }
+    .culture-photo-wide {
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .culture-photo-wide img {
+      width: 100%; height: 280px;
+      object-fit: cover; object-position: center 30%;
+      display: block;
+    }
+
+    /* ── DIFFERENCE SECTION ── */
+    .difference { background: var(--charcoal); }
+    .difference .section-title { color: var(--white); }
+    .difference .section-label { color: rgba(229,22,54,0.9); }
+    .difference .section-body { color: rgba(255,255,255,0.7); max-width: 520px; margin-bottom: 64px; }
+    .diff-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+      background: rgba(255,255,255,0.06);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .diff-card {
+      background: rgba(255,255,255,0.03);
+      padding: 40px 36px;
+      transition: background 0.2s;
+    }
+    .diff-card:hover { background: rgba(255,255,255,0.07); }
+    .diff-number {
+      font-family: var(--font-serif);
+      font-size: 48px; font-weight: 700;
+      color: var(--red);
+      line-height: 1;
+      margin-bottom: 16px;
+      opacity: 0.9;
+    }
+    .diff-card h3 {
+      font-size: 16px; font-weight: 600;
+      color: var(--white);
+      margin-bottom: 10px;
+      letter-spacing: -0.01em;
+    }
+    .diff-card p {
+      font-size: 14px; line-height: 1.65;
+      color: rgba(255,255,255,0.55);
+    }
+
+    /* ── ROLES SECTION ── */
+    .roles { background: var(--cream); }
+    .roles-intro { max-width: 560px; margin-bottom: 56px; }
+    .roles-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+    .role-link {
+      display: inline-block;
+      margin-top: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #E51636;
+      text-decoration: none;
+      letter-spacing: 0.02em;
+      transition: gap .2s;
+    }
+    .role-link:hover { text-decoration: underline; }
+    .role-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 32px;
+      border: 1px solid rgba(0,0,0,0.06);
+      transition: box-shadow 0.2s, transform 0.2s;
+      display: flex; flex-direction: column;
+    }
+    .role-card:hover {
+      box-shadow: 0 12px 36px rgba(0,0,0,0.1);
+      transform: translateY(-2px);
+    }
+    .role-type {
+      font-size: 10px; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--red);
+      margin-bottom: 10px;
+    }
+    .role-card h3 {
+      font-family: var(--font-serif);
+      font-size: 20px; font-weight: 700;
+      color: var(--charcoal);
+      margin-bottom: 10px;
+    }
+    .role-card p {
+      font-size: 14px; line-height: 1.65;
+      color: var(--text-body);
+      flex: 1;
+      margin-bottom: 24px;
+    }
+    .role-apply {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 13px; font-weight: 600;
+      color: var(--red);
+      text-decoration: none;
+      letter-spacing: 0.02em;
+    }
+    .role-apply:hover { gap: 10px; }
+    .role-apply svg { width: 14px; height: 14px; transition: transform 0.2s; }
+    .role-apply:hover svg { transform: translateX(3px); }
+
+    /* ── MISSION ── */
+    .mission {
+      background: var(--red);
+      padding: 100px 32px;
+      text-align: center;
+    }
+    .mission-label {
+      font-size: 11px; font-weight: 600;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: rgba(255,255,255,0.65);
+      margin-bottom: 20px;
+    }
+    .mission h2 {
+      font-family: var(--font-serif);
+      font-size: clamp(36px, 5vw, 64px);
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      max-width: 820px;
+      margin: 0 auto 20px;
+    }
+    .mission h2 em { font-style: italic; }
+    .mission p {
+      font-size: 17px; color: rgba(255,255,255,0.75);
+      max-width: 480px; margin: 0 auto;
+      line-height: 1.65;
+    }
+
+    /* ── INTEREST FORM ── */
+    .interest { background: var(--cream-mid); }
+    .interest-intro {
+      max-width: 640px;
+      margin-bottom: 40px;
+    }
+    .interest-body {
+      font-size: 16px; line-height: 1.75;
+      color: var(--text-body);
+      margin-bottom: 12px;
+    }
+    .form-card {
+      background: var(--white);
+      border-radius: 16px;
+      padding: 40px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+    }
+    .form-card h3 {
+      font-family: var(--font-serif);
+      font-size: 22px; font-weight: 700;
+      color: var(--charcoal);
+      margin-bottom: 24px;
+    }
+    .form-row { margin-bottom: 16px; }
+    .form-row label {
+      display: block;
+      font-size: 12px; font-weight: 600;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .form-row input,
+    .form-row select,
+    .form-row textarea {
+      width: 100%;
+      font-family: var(--font-sans);
+      font-size: 15px;
+      color: var(--charcoal);
+      background: var(--cream);
+      border: 1.5px solid rgba(0,0,0,0.1);
+      border-radius: 8px;
+      padding: 12px 14px;
+      outline: none;
+      transition: border-color 0.2s;
+      appearance: none;
+    }
+    .form-row input:focus,
+    .form-row select:focus,
+    .form-row textarea:focus { border-color: var(--red); }
+    .form-row textarea { resize: vertical; min-height: 90px; }
+    .form-submit {
+      width: 100%;
+      background: var(--red);
+      color: #fff;
+      font-family: var(--font-sans);
+      font-size: 14px; font-weight: 600;
+      letter-spacing: 0.04em; text-transform: uppercase;
+      border: none; cursor: pointer;
+      padding: 14px;
+      border-radius: 100px;
+      margin-top: 8px;
+      transition: background 0.2s;
+    }
+    .form-submit:hover { background: var(--red-dark); }
+    .form-note {
+      font-size: 12px; color: var(--text-muted);
+      text-align: center; margin-top: 12px;
+      line-height: 1.5;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--charcoal);
+      padding: 60px 32px;
+      text-align: center;
+    }
+    .footer-logo { margin-bottom: 20px; }
+    .footer-logo img {
+      height: 52px; width: auto;
+      filter: brightness(0) invert(1);
+      opacity: 0.9;
+    }
+    .footer-address {
+      font-size: 13px;
+      color: rgba(255,255,255,0.4);
+      letter-spacing: 0.04em;
+      line-height: 1.8;
+      margin-bottom: 8px;
+    }
+    .footer-legal {
+      font-size: 11px;
+      color: rgba(255,255,255,0.25);
+      letter-spacing: 0.03em;
+    }
+
+    /* ── SCROLL REVEAL ── */
+    .reveal { opacity: 0; transform: translateY(28px); transition: opacity 0.7s ease, transform 0.7s ease; }
+    .reveal.visible { opacity: 1; transform: none; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .operator-grid { grid-template-columns: 1fr; gap: 48px; }
+      .operator-photo-wrap { max-width: 360px; }
+      .operator-badge { bottom: -16px; right: -8px; }
+      .culture-grid { grid-template-columns: 1fr; }
+      .culture-photo-tall { grid-row: span 1; height: 320px; }
+      .diff-grid { grid-template-columns: 1fr 1fr; }
+      .interest-intro {
+      max-width: 640px;
+      margin-bottom: 40px;
+    }
+      .hero-content { padding: 0 24px 56px; }
+    }
+    @media (max-width: 600px) {
+      section { padding: 72px 20px; }
+      nav { padding: 0 20px; }
+      .diff-grid { grid-template-columns: 1fr; }
+      .hero h1 { font-size: 38px; }
+    }
+  
+
+    .hero-cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+    @media (max-width: 480px) {
+      .hero-cta-row { flex-direction: column; align-items: flex-start; }
+    }
+    .community-bar {
+      background: #E51636;
+      padding: 18px 0;
+    }
+    .community-bar-inner {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      text-align: center;
+    }
+    .community-bar-text {
+      font-size: 14px;
+      font-weight: 500;
+      color: #ffffff;
+      letter-spacing: 0.01em;
+      line-height: 1.5;
+    }
+    .community-bar-divider {
+      color: rgba(255,255,255,0.4);
+      font-size: 18px;
+    }
+    @media (max-width: 600px) {
+      .community-bar-divider { display: none; }
+      .community-bar-inner { flex-direction: column; gap: 6px; }
+    }
+  
+    /* ── PARTNERS ─────────────────────────────────────── */
+    .partners {
+      background: #FAF9F7;
+      padding: 96px 0;
+    }
+    .community-care-card {
+      display: flex;
+      gap: 24px;
+      align-items: flex-start;
+      background: #fff;
+      border-radius: 16px;
+      padding: 32px 36px;
+      margin: 48px 0 56px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+    }
+    .community-care-icon {
+      flex-shrink: 0;
+      width: 52px; height: 52px;
+      background: #FFF0F2;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin-top: 4px;
+    }
+    .community-care-body h3 {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--charcoal);
+      margin-bottom: 10px;
+    }
+    .community-care-body p {
+      font-size: 16px;
+      line-height: 1.7;
+      color: var(--text-body);
+      margin-bottom: 16px;
+    }
+    .partner-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--red);
+      text-decoration: none;
+      letter-spacing: 0.02em;
+    }
+    .partner-cta:hover { text-decoration: underline; }
+    .partners-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-bottom: 48px;
+    }
+    .partner-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 28px 20px 20px;
+      text-align: center;
+      box-shadow: 0 1px 8px rgba(0,0,0,0.05);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .partner-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.09);
+    }
+    .partner-logo-wrap {
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+    .partner-logo-wrap img {
+      max-height: 70px;
+      max-width: 140px;
+      width: auto;
+      object-fit: contain;
+    }
+    .partner-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--charcoal);
+      line-height: 1.4;
+    }
+    .partner-name span {
+      font-weight: 400;
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+    .partners-cta-line {
+      text-align: center;
+      font-size: 16px;
+      color: var(--text-body);
+    }
+    .partners-inline-link {
+      color: var(--red);
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .partners-inline-link:hover { text-decoration: underline; }
+
+
+
+    .nav-fb-link {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--charcoal);
+      opacity: 0.6;
+      transition: opacity 0.2s;
+      text-decoration: none;
+    }
+    .nav-fb-link:hover { opacity: 1; color: #1877F2; }
+    .footer-social {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .footer-social-link {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.7);
+      transition: background 0.2s, color 0.2s;
+      text-decoration: none;
+    }
+    .footer-social-link:hover {
+      background: #1877F2;
+      color: #fff;
+    }
+    .partner-logo-text {
+      background: #E51636;
+      border-radius: 10px;
+      width: 80px;
+      height: 70px;
+    }
+    .partner-text-logo {
+      font-family: var(--font-display);
+      font-size: 26px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: 0.05em;
+    }
+    @media (max-width: 768px) {
+      .partners-grid { grid-template-columns: repeat(2, 1fr); }
+      .community-care-card { flex-direction: column; gap: 16px; }
+    }
+    @media (max-width: 480px) {
+      .partners-grid { grid-template-columns: 1fr 1fr; gap: 16px; }
+    }
+  </style>
+<style>@keyframes _spin_evhv6_1{0%{transform:rotate(0)}to{transform:rotate(360deg)}}@keyframes _wave_evhv6_1{0%{transform:rotate(0)}50%{transform:rotate(20deg)}to{transform:rotate(0)}}@keyframes _heartBeat_evhv6_1{0%{transform:scale(1)}50%{transform:scale(1.08)}to{transform:scale(1)}}@keyframes _flash_evhv6_1{0%,50%,to{opacity:1}25%,75%{opacity:.2}}@keyframes _bounce_evhv6_1{0%,20%,53%,to{transform:translateZ(0)}40%,43%{transform:translate3d(0,-30px,0) scaleY(1.1)}70%{transform:translate3d(0,-15px,0) scaleY(1.05)}80%{transform:translateZ(0) scaleY(.95)}90%{transform:translate3d(0,-4px,0) scaleY(1.02)}}@keyframes _rubberBand_evhv6_1{0%{transform:scaleZ(1)}30%{transform:scale3d(1.25,.75,1)}40%{transform:scale3d(.75,1.25,1)}50%{transform:scale3d(1.15,.85,1)}65%{transform:scale3d(.95,1.05,1)}75%{transform:scale3d(1.05,.95,1)}to{transform:scaleZ(1)}}@keyframes _headShake_evhv6_1{0%{transform:translate(0)}6.5%{transform:translate(-6px) rotateY(-9deg)}18.5%{transform:translate(5px) rotateY(7deg)}31.5%{transform:translate(-3px) rotateY(-5deg)}43.5%{transform:translate(2px) rotateY(3deg)}50%{transform:translate(0)}}@keyframes _tada_evhv6_1{0%{transform:scaleZ(1)}10%,20%{transform:scale3d(.9,.9,.9) rotate3d(0,0,1,-3deg)}30%,50%,70%,90%{transform:scale3d(1.1,1.1,1.1) rotate3d(0,0,1,3deg)}40%,60%,80%{transform:scale3d(1.1,1.1,1.1) rotate3d(0,0,1,-3deg)}to{transform:scaleZ(1)}}._overlay_evhv6_157{position:fixed;inset:0;z-index:1000000006;display:-ms-flexbox;display:flex;-ms-flex-pack:center;justify-content:center;-ms-flex-align:center;align-items:center;background-color:#0f0f0f99}._layoutDefault_evhv6_170{position:fixed;right:20px;bottom:20px;z-index:2147483000;width:auto;height:auto;max-width:95vw;display:-ms-flexbox;display:flex;background-color:transparent;border-radius:5px;box-shadow:#0f0f0f0d 0 0 0 1px,#0f0f0f1a 0 3px 6px,#0f0f0f33 0 9px 24px;opacity:0}._layoutModal_evhv6_186{position:relative;z-index:2147483000;width:700px;height:auto;max-width:95vw;display:-ms-flexbox;display:flex;background-color:transparent;border-radius:5px;box-shadow:#0f0f0f0d 0 0 0 1px,#0f0f0f1a 0 3px 6px,#0f0f0f33 0 9px 24px;opacity:0}._popupContainer_evhv6_200{display:-ms-flexbox;display:flex;width:100%;border-radius:5px;overflow-y:auto}._popupContainer_evhv6_200 iframe{border-radius:5px;max-height:95vh}._loadingIndicator_evhv6_212{position:absolute;z-index:2147483000;display:-ms-inline-flexbox;display:inline-flex;-ms-flex-align:center;align-items:center;-ms-flex-pack:center;justify-content:center;width:50px;height:50px;border-radius:50%;color:#444;background-color:#f5f5f5}._loadingIndicatorNoOverlay_evhv6_225{position:fixed;right:10px;bottom:10px}._loadingIndicator_evhv6_212 svg{width:20px;height:20px;animation:_spin_evhv6_1 1.618s linear infinite}._emoji_evhv6_237{position:absolute;top:-21px;left:-21px;display:inline-block;font-size:42px;line-height:1}._animate__wave_evhv6_246{animation:_wave_evhv6_1 1s ease-in-out 20}._animate__heart-beat_evhv6_250{animation:_heartBeat_evhv6_1 1.3s ease-in-out 20}._animate__flash_evhv6_254{animation:_flash_evhv6_1 2.5s 20}._animate__bounce_evhv6_258{animation:_bounce_evhv6_1 1.5s 20;-ms-transform-origin:center bottom;transform-origin:center bottom}._animate__rubber-band_evhv6_263{animation:_rubberBand_evhv6_1 1.5s 20}._animate__head-shake_evhv6_267{animation:_headShake_evhv6_1 1.5s ease-in-out 20}._animate__tada_evhv6_271{animation:_tada_evhv6_1 1.5s 20}._animate__spin_evhv6_275{animation:_spin_evhv6_1 1.618s linear 20}@media(max-height:1000px){._popupContainer_evhv6_200 iframe{max-height:85vh}}@media(max-width:576px){._popupContainer_evhv6_200 iframe{max-height:70vh}._layoutDefault_evhv6_170,._layoutModal_evhv6_186{max-width:calc(100% - 40px)}}
+/*$vite$:1*/</style></head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <div class="nav-logo">
+      <img src="logo-transparent.png" alt="Chick-fil-A Hueytown">
+    </div>
+    <a href="https://www.cfahueytown.com/#interest" class="nav-cta">Join the Team</a>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <img src="img-team-kitchen.jpg" alt="Chick-fil-A team" class="hero-img">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+          <h1>Something <em>different</em> is coming to Hueytown.</h1>
+      <p class="hero-sub">We're building a team that raises the bar — for Hueytown, for each other, and for every guest who walks through our doors.</p>
+      <div class="hero-actions">
+        <a href="https://www.cfahueytown.com/#roles" class="btn-primary">See Open Roles</a>
+        <a href="https://www.cfahueytown.com/#operator" class="btn-ghost">Meet the Operator</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- TICKER -->
+  <div class="ticker">
+    <div class="ticker-inner">
+      <span class="ticker-item">My Pleasure</span>
+      <span class="ticker-item">Founding Team</span>
+      <span class="ticker-item">Hueytown, Alabama</span>
+      <span class="ticker-item">Unreasonable Hospitality</span>
+      <span class="ticker-item">Now Hiring</span>
+      <span class="ticker-item">We Create Stories of Care</span>
+      <span class="ticker-item">My Pleasure</span>
+      <span class="ticker-item">Founding Team</span>
+      <span class="ticker-item">Hueytown, Alabama</span>
+      <span class="ticker-item">Unreasonable Hospitality</span>
+      <span class="ticker-item">Now Hiring</span>
+      <span class="ticker-item">We Create Stories of Care</span>
+    </div>
+  </div>
+
+  <!-- OPERATOR -->
+  <section class="operator" id="operator">
+    <div class="inner">
+      <div class="operator-grid">
+        <div class="operator-photo-wrap reveal visible">
+          <img src="img-tim.jpg" alt="Tim Sweetman, Operator" class="operator-photo">
+          <div class="operator-badge">
+            <strong>Tim Sweetman</strong>
+            Owner · Operator
+          </div>
+        </div>
+        <div class="operator-content reveal visible">
+          <p class="section-label">Meet the Operator</p>
+          <h2 class="section-title">Michelin standards.<br><em>Hueytown heart.</em></h2>
+          <blockquote class="operator-quote">
+            "The thing that struck me most was the unexpected final touch — the detail that made something already perfect feel even better. That's what we're building here."
+          </blockquote>
+          <p class="operator-body">Tim Sweetman opened his first Chick-fil-A in Millsboro, Delaware in 2018, where he pioneered hospitality practices that translate fine-dining principles into quick-service operations — an approach featured in <em>QSR Magazine</em>. His work centers on anticipatory service and giving team members the tools to create genuine surprise-and-delight moments.</p>
+          <p class="operator-body">A graduate of Stanford Graduate School of Business's LEAD program, Tim grew up in the Washington, D.C. metro area and has spent his career studying what makes teams and cultures thrive. His background spans nonprofit leadership, brand strategy, and organizational culture. He believes the best teams are built around character first — and that the details most operators overlook are exactly where the difference is made.</p>
+          <p class="operator-body">Tim is married to Emily and has five children.</p>
+          <a href="https://www.qsrmagazine.com/story/what-chick-fil-a-operator-tim-sweetman-learned-from-a-michelin-starred-restaurant/" target="_blank" rel="noopener" class="press-link">
+            Read the QSR Magazine feature
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"></path></svg>
+          </a>
+        <a href="https://www.cfahueytown.com/#community" class="press-link" style="margin-top:20px;">
+            Our Community Commitment
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"></path></svg>
+          </a>
+          <a href="https://www.linkedin.com/in/timsweetman/" target="_blank" rel="noopener" class="press-link">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="margin-right:6px; vertical-align:middle; position:relative; top:-1px;"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"></path></svg>
+            Connect on LinkedIn
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CULTURE -->
+  <section class="culture" id="culture">
+    <div class="inner">
+      <div class="reveal visible">
+        <p class="section-label">Life on the Team</p>
+        <h2 class="section-title">A place where <em>good people</em><br>do great work.</h2>
+      </div>
+      <div class="culture-grid">
+        <div class="culture-photo-tall reveal visible">
+          <img src="img-team-exterior.jpg" alt="Team members in the kitchen">
+        </div>
+        <div class="culture-cards-stack">
+          <div class="culture-card reveal visible">
+            <h3>You'll be known by name.</h3>
+            <p>From your first shift, you're not a number on a schedule. You're part of a team that invests in people — and remembers why that matters.</p>
+          </div>
+          <div class="culture-card reveal visible">
+            <h3>You'll be coached, not just managed.</h3>
+            <p>Leaders here are on the floor with you — not behind a desk. Expect real feedback, real investment, and someone who notices when you're ready for more.</p>
+          </div>
+          <div class="culture-card reveal visible">
+            <h3>You'll do work that means something.</h3>
+            <p>We believe a shift at Chick-fil-A Hueytown should leave you better than you arrived. Better at your craft, more confident, more connected.</p>
+          </div>
+          <div class="culture-card reveal visible">
+            <h3>You'll be taken care of.</h3>
+            <p>Access to Direct2Care, a telehealth benefit that connects you with real providers — from your phone, on your schedule, starting day one. Plus a team that shows up for each other, and an operator who thinks hard about what it means to actually support his people.</p>
+          </div>
+        </div>
+        <div class="culture-photo-wide reveal visible">
+          <img src="img-team-drivethru.jpg" alt="Team members in the drive-thru">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DIFFERENCE -->
+  <section class="difference">
+    <div class="inner">
+      <p class="section-label reveal visible">The Hueytown Difference</p>
+      <h2 class="section-title reveal visible">We're raising the standard — <em>together.</em></h2>
+      <p class="section-body reveal visible">This is a place where your best work is expected, celebrated, and built on. Where the people around you push you forward — and you do the same for them.</p>
+      <div class="diff-grid">
+        <div class="diff-card reveal visible">
+          <div class="diff-number">01</div>
+          <h3>Character First</h3>
+          <p>We hire for who you are before what you've done. Skills grow with the right coaching. Character is what makes a team worth being on.</p>
+        </div>
+        <div class="diff-card reveal visible">
+          <div class="diff-number">02</div>
+          <h3>Unreasonable Hospitality</h3>
+          <p>The napkin under the refill. The name remembered. The extra step nobody asked for. That's our standard, every shift.</p>
+        </div>
+        <div class="diff-card reveal visible">
+          <div class="diff-number">03</div>
+          <h3>Real Development</h3>
+          <p>We promote from within because we invest in people. If you bring the character, we'll build the skills — and the path forward is real.</p>
+        </div>
+        <div class="diff-card reveal visible">
+          <div class="diff-number">04</div>
+          <h3>Day One Benefits</h3>
+          <p>Access to Direct2Care, a telehealth benefit that connects you with real providers — from your phone, on your schedule, starting day one.</p>
+        </div>
+        <div class="diff-card reveal visible">
+          <div class="diff-number">05</div>
+          <h3>Stories of Care</h3>
+          <p>Every shift is a chance to make someone's day better. That's not a slogan — it's what we actually believe, and it shows in how we work.</p>
+        </div>
+        <div class="diff-card reveal visible">
+          <div class="diff-number">06</div>
+          <h3>Founding Team</h3>
+          <p>You won't just work here. You'll help shape what this place becomes — and that legacy starts on day one.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ROLES -->
+  <section class="roles" id="roles">
+    <div class="inner">
+      <div class="roles-intro reveal visible">
+        <p class="section-label">Open Positions</p>
+        <h2 class="section-title">Find your <em>role.</em></h2>
+        <p class="section-body">We're building the founding team across every level of the restaurant. Leadership roles, kitchen roles, guest-facing roles — all of them matter.</p>
+      </div>
+      <div class="roles-grid">
+        <div class="role-card reveal visible">
+          <p class="role-type">Team</p>
+          <h3>Team Leader</h3>
+          <p>You know every team member's name before the shift starts. You're on the floor, not behind a desk — coaching in real time, spotting what needs attention, and making the whole team better by being present.</p>
+          <a href="mailto:t@cfahueytown.com?subject=Team%20Leader%20Interest" class="role-apply">Apply Now
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"></path></svg>
+          </a>
+        
+          <a href="https://www.cfahueytown.com/roles/team-leader.html" class="role-link">View Full Description →</a>
+        </div>
+        <div class="role-card reveal visible">
+          <p class="role-type">Team</p>
+          <h3>Team Member</h3>
+          <p>You take pride in doing things right, even when no one's watching. You show up ready, support the people around you, and find satisfaction in a shift well run. If that's you — we'd love to meet you.</p>
+          <a href="mailto:t@cfahueytown.com?subject=Team%20Member%20Interest" class="role-apply">Apply Now
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"></path></svg>
+          </a>
+        
+          <a href="https://www.cfahueytown.com/roles/team-member.html" class="role-link">View Full Description →</a>
+        </div>
+        <div class="role-card reveal visible">
+          <p class="role-type">Full-Time · Hourly</p>
+          <h3>Operations Manager</h3>
+          <p>You make daily operations work at a high-volume, fast-paced store. You don't just run good shifts — you build the playbook that makes good shifts repeatable.</p>
+          <a href="https://tally.so/r/ODG5DA?role=Operations+Manager" target="_blank" rel="noopener" class="role-apply">Apply Now
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"></path></svg>
+          </a>
+          <a href="https://www.cfahueytown.com/roles/operations-manager.html" class="role-link">View Full Description →</a>
+        </div>
+        <div class="role-card reveal visible">
+          <p class="role-type">Full-Time · Hourly</p>
+          <h3>Catering &amp; Marketing Manager</h3>
+          <p>You build relationships before the first order is placed. You own catering growth, community visibility, and the partnerships that make this restaurant a fixture in Hueytown.</p>
+          <a href="https://tally.so/r/ODG5DA?role=Catering+%26+Marketing+Manager" target="_blank" rel="noopener" class="role-apply">Apply Now
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"></path></svg>
+          </a>
+          <a href="https://www.cfahueytown.com/roles/catering-marketing-manager.html" class="role-link">View Full Description →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MISSION -->
+  <section class="mission">
+    <p class="mission-label">Our Mission</p>
+    <h2>"We create <em>stories of care</em> — with our guests, our team, and our community."</h2>
+    <p></p>
+  </section>
+
+  
+  <!-- COMMUNITY PARTNERS -->
+  <section class="partners" id="community">
+    <div class="inner">
+      <p class="section-label reveal visible">Community Partners</p>
+      <h2 class="section-title reveal visible">Rooted in <em>Hueytown.</em></h2>
+      <p class="section-body reveal visible">We believe a Chick-fil-A should be more than a restaurant — it should be a neighbor. From day one, we're committed to showing up for the organizations and institutions that make this community what it is.</p>
+
+      <div class="community-care-card reveal visible">
+        <div class="community-care-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="28" height="28">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="#E51636"></path>
+          </svg>
+        </div>
+        <div class="community-care-body">
+          <h3>Community Care Days</h3>
+          <p>We're dedicated to giving back. Eligible nonprofits can host a Community Care Day at Chick-fil-A Hueytown — we'll donate <strong>10% of the sales they generate</strong> through the Chick-fil-A App directly back to their organization. Want to bring your nonprofit on board? We'd love to hear from you.</p>
+          <a href="mailto:t@cfahueytown.com?subject=Community%20Care%20Day%20Interest" class="partner-cta">Get in Touch →</a>
+        </div>
+      </div>
+
+      <div class="partners-grid">
+        <div class="partner-card reveal visible">
+          <div class="partner-logo-wrap">
+            <img src="logo-chamber.jpg" alt="Hueytown Chamber of Commerce">
+          </div>
+          <p class="partner-name">Hueytown Chamber of Commerce</p>
+        </div>
+        <div class="partner-card reveal visible">
+          <div class="partner-logo-wrap">
+            <img src="logo-feeding-america.jpg" alt="Feeding America">
+          </div>
+          <p class="partner-name">Feeding America</p>
+        </div>
+        <div class="partner-card reveal visible">
+          <div class="partner-logo-wrap">
+            <img src="logo-restoration-academy.png" alt="Restoration Academy">
+          </div>
+          <p class="partner-name">Restoration Academy</p>
+        </div>
+        <div class="partner-card reveal visible">
+          <div class="partner-logo-wrap">
+            <img src="logo-dream-forever.png" alt="Dream Forever Foundation">
+          </div>
+          <p class="partner-name">Dream Forever Foundation</p>
+        </div>
+        <div class="partner-card reveal visible">
+          <div class="partner-logo-wrap">
+            <img src="logo-hueytown-high.png" alt="Hueytown High School">
+          </div>
+          <p class="partner-name">Hueytown High School</p>
+        </div>
+        <div class="partner-card reveal visible">
+          <div class="partner-logo-wrap">
+            <img src="logo-miles-college.png" alt="Miles College">
+          </div>
+          <p class="partner-name">Miles College</p>
+        </div>
+</div>
+
+      <p class="partners-cta-line reveal visible">Is your organization interested in partnering with us? <a href="mailto:t@cfahueytown.com?subject=Partnership%20Interest" class="partners-inline-link">Reach out — we'd love to connect.</a></p>
+    </div>
+  </section>
+
+  <!-- INTEREST FORM -->
+  <section class="interest" id="interest">
+    <div class="inner">
+      <div class="interest-intro reveal visible">
+        <p class="section-label">Get in Touch</p>
+        <h2 class="section-title">Ready to be part of <em>something new?</em></h2>
+        <p class="interest-body">We're in the early stages of building something we're genuinely proud of. If any of the roles above caught your attention — or if you just want to be first to know when we open — we'd love to hear from you.</p>
+        <p class="interest-body">We read every message personally.</p>
+      </div>
+      <div class="form-card form-card-full reveal">
+        <h3>Express Your Interest</h3>
+        <iframe data-tally-src="https://tally.so/embed/ODG5DA?alignLeft=1&amp;hideTitle=1&amp;transparentBackground=1&amp;dynamicHeight=1" loading="lazy" width="100%" height="500" frameborder="0" marginheight="0" marginwidth="0" title="Join the Founding Team" style="border: none; width: 100%; min-height: 480px; overflow: hidden; height: 3374.4px;" data-tally-embed-widget-initialized="1" src="./Chick-fil-A Hueytown — Now Hiring_files/ODG5DA.html" id="iFrameResizer0" scrolling="no"></iframe>
+        <script>var d=document,w="https://tally.so/widgets/embed.js",v=function(){"undefined"!=typeof Tally?Tally.loadEmbeds():d.querySelectorAll("iframe[data-tally-src]:not([src])").forEach((function(e){e.src=e.dataset.tallySrc}))};if("undefined"!=typeof Tally)v();else if(d.querySelector('script[src="'+w+'"]')==null){var s=d.createElement("script");s.src=w,s.onload=v,s.onerror=v,d.body.appendChild(s);}</script>
+      </div>
+    </div>
+  </section><!-- FOOTER -->
+  
+  <!-- COMMUNITY BAR -->
+  <section class="community-bar">
+    <div class="inner community-bar-inner">
+      <span class="community-bar-text">
+        Opening in 2026 on Allison-Bonnett Memorial Drive — right in the heart of Hueytown.
+      </span>
+      <span class="community-bar-divider">·</span>
+      <span class="community-bar-text">
+        Over 1,000 Hueytown residents have already shared their excitement. We can't wait to meet you.
+      </span>
+    </div>
+  </section>
+
+<footer>
+    <div class="footer-logo">
+      <img src="logo-transparent.png" alt="Chick-fil-A Hueytown">
+    </div>
+    <p class="footer-address">
+      2885 Allison-Bonnett Memorial Drive · Hueytown, Alabama 35023<br>
+      <a href="mailto:t@cfahueytown.com" style="color:rgba(255,255,255,0.4); text-decoration:none;">t@cfahueytown.com</a>
+    </p>
+    <div class="footer-social">
+          <a href="https://www.facebook.com/profile.php?id=61581756599040" target="_blank" rel="noopener" class="footer-social-link" aria-label="Facebook">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
+          </a>
+        </div>
+        <p class="footer-legal">© 2026 Chick-fil-A Hueytown. All rights reserved.</p>
+  </footer>
+
+  <script>
+    // Scroll reveal
+    const reveals = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((e, i) => {
+        if (e.isIntersecting) {
+          setTimeout(() => e.target.classList.add('visible'), i * 60);
+          observer.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.12 });
+    reveals.forEach(el => observer.observe(el));
+  </script>
+
+<script data-obvious-badge="">
+(function() {
+  // Only show badge if NOT in iframe (external access only)
+  if (window.self === window.top) {
+    // Create badge as clickable link
+    var badge = document.createElement('a');
+    badge.href = 'https://obvious.ai/';
+    badge.target = '_blank';
+    badge.rel = 'noopener noreferrer';
+
+    // Apply fixed positioning styles inline (works even if app overrides CSS)
+    badge.style.cssText = 'position: fixed; bottom: 16px; right: 16px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: rgba(255, 255, 255, 0.95); border-radius: 6px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif; font-size: 13px; color: rgba(0, 0, 0, 0.72); text-decoration: none; opacity: 0.6; z-index: 9999; transition: opacity 0.2s; cursor: pointer;';
+
+    badge.innerHTML = '\x3csvg xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 22 20\" width=\"16\" height=\"16\"\x3e\n  \x3cpath fill=\"currentColor\" fill-opacity=\".92\" fill-rule=\"evenodd\" d=\"M10.94.68c.04.02.08.02.12 0a5.08 5.08 0 0 1 5.15.04 5.38 5.38 0 0 1 2.6 4.57c0 .04.03.08.06.1A5.39 5.39 0 0 1 21.42 10a5.39 5.39 0 0 1-2.55 4.6.12.12 0 0 0-.06.1 5.38 5.38 0 0 1-2.6 4.58c-1.65.98-3.6.93-5.15.04a.12.12 0 0 0-.12 0c-1.55.89-3.5.94-5.15-.04a5.38 5.38 0 0 1-2.6-4.57.12.12 0 0 0-.06-.1A5.39 5.39 0 0 1 .58 10a5.39 5.39 0 0 1 2.55-4.6.12.12 0 0 0 .06-.1c.02-1.84.95-3.6 2.6-4.58a5.08 5.08 0 0 1 5.15-.04ZM8.4 14.85c0-.1-.1-.15-.18-.1a5.07 5.07 0 0 1-3.33.53.12.12 0 0 0-.14.13 3.83 3.83 0 0 0 1.79 2.55c.95.56 2.05.65 3.03.31.07-.02.1-.12.04-.18a5.4 5.4 0 0 1-1.21-3.24Zm5.38-.1c-.08-.05-.18 0-.18.1a5.45 5.45 0 0 1-1.21 3.24c-.06.06-.03.16.04.18.98.34 2.08.25 3.03-.31a3.81 3.81 0 0 0 1.79-2.55.12.12 0 0 0-.14-.13 5.1 5.1 0 0 1-3.33-.54Zm-2.7-2.76a.1.1 0 0 0-.16 0 3.91 3.91 0 0 0 0 5.3.1.1 0 0 0 .16 0 3.91 3.91 0 0 0 0-5.3Zm-1.71-.93a.11.11 0 0 0-.08-.14 3.68 3.68 0 0 0-4.47 2.66c-.02.06.02.12.08.14a3.74 3.74 0 0 0 4.47-2.65Zm7.46 1.67a3.68 3.68 0 0 0-4.12-1.8.11.11 0 0 0-.08.13 3.74 3.74 0 0 0 4.47 2.66c.06-.02.1-.08.08-.14a3.9 3.9 0 0 0-.35-.85Zm1.85-5.59a.11.11 0 0 0-.18.05 5.46 5.46 0 0 1-2.12 2.7.13.13 0 0 0 0 .22 5.27 5.27 0 0 1 2.12 2.7c.03.08.12.1.18.05A3.87 3.87 0 0 0 19.93 10c0-1.14-.48-2.16-1.25-2.86ZM3.5 7.19a.11.11 0 0 0-.18-.05A3.87 3.87 0 0 0 2.07 10c0 1.14.48 2.16 1.25 2.86.06.05.15.03.18-.05a5.47 5.47 0 0 1 2.12-2.7.13.13 0 0 0 0-.22A5.27 5.27 0 0 1 3.5 7.2Zm2.3-1.02c-.32 0-.61.04-.9.11a.11.11 0 0 0-.08.14A3.68 3.68 0 0 0 9.3 9.07c.06 0 .1-.07.08-.13A3.74 3.74 0 0 0 5.8 6.17Zm10.4 0a3.74 3.74 0 0 0-3.57 2.77c-.01.06.02.12.08.14a3.68 3.68 0 0 0 4.47-2.66.11.11 0 0 0-.08-.14 3.63 3.63 0 0 0-.9-.1Zm-5.12-3.46a.1.1 0 0 0-.16 0 3.91 3.91 0 0 0 0 5.3.1.1 0 0 0 .16 0 3.91 3.91 0 0 0 0-5.3ZM9.6 1.9c.06-.06.03-.16-.04-.18a3.62 3.62 0 0 0-3.03.31A3.81 3.81 0 0 0 4.75 4.6c-.01.08.06.15.14.13a5.1 5.1 0 0 1 3.33.54c.08.04.18-.02.18-.1A5.45 5.45 0 0 1 9.6 1.9Zm5.85.13a3.62 3.62 0 0 0-3.03-.31c-.07.02-.1.12-.04.18a5.4 5.4 0 0 1 1.21 3.24c0 .1.1.15.18.1a5.07 5.07 0 0 1 3.33-.53c.08.02.15-.05.14-.13a3.81 3.81 0 0 0-1.79-2.55Z\" clip-rule=\"evenodd\"/\x3e\n\x3c/svg\x3e <span>Created with Obvious</span>';
+
+    // Hover effect
+    badge.onmouseenter = function() { badge.style.opacity = '0.9'; };
+    badge.onmouseleave = function() { badge.style.opacity = '0.6'; };
+
+    // Inject on DOM ready
+    if (document.body) {
+      document.body.appendChild(badge);
+    } else {
+      document.addEventListener('DOMContentLoaded', function() {
+        document.body.appendChild(badge);
+      });
+    }
+  }
+})();
+</script><a href="https://obvious.ai/" target="_blank" rel="noopener noreferrer" style="position: fixed; bottom: 16px; right: 16px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: rgba(255, 255, 255, 0.95); border-radius: 6px; box-shadow: rgba(0, 0, 0, 0.1) 0px 2px 8px; font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif; font-size: 13px; color: rgba(0, 0, 0, 0.72); text-decoration: none; opacity: 0.6; z-index: 9999; transition: opacity 0.2s; cursor: pointer;"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 22 20" width="16" height="16">
+  <path fill="currentColor" fill-opacity=".92" fill-rule="evenodd" d="M10.94.68c.04.02.08.02.12 0a5.08 5.08 0 0 1 5.15.04 5.38 5.38 0 0 1 2.6 4.57c0 .04.03.08.06.1A5.39 5.39 0 0 1 21.42 10a5.39 5.39 0 0 1-2.55 4.6.12.12 0 0 0-.06.1 5.38 5.38 0 0 1-2.6 4.58c-1.65.98-3.6.93-5.15.04a.12.12 0 0 0-.12 0c-1.55.89-3.5.94-5.15-.04a5.38 5.38 0 0 1-2.6-4.57.12.12 0 0 0-.06-.1A5.39 5.39 0 0 1 .58 10a5.39 5.39 0 0 1 2.55-4.6.12.12 0 0 0 .06-.1c.02-1.84.95-3.6 2.6-4.58a5.08 5.08 0 0 1 5.15-.04ZM8.4 14.85c0-.1-.1-.15-.18-.1a5.07 5.07 0 0 1-3.33.53.12.12 0 0 0-.14.13 3.83 3.83 0 0 0 1.79 2.55c.95.56 2.05.65 3.03.31.07-.02.1-.12.04-.18a5.4 5.4 0 0 1-1.21-3.24Zm5.38-.1c-.08-.05-.18 0-.18.1a5.45 5.45 0 0 1-1.21 3.24c-.06.06-.03.16.04.18.98.34 2.08.25 3.03-.31a3.81 3.81 0 0 0 1.79-2.55.12.12 0 0 0-.14-.13 5.1 5.1 0 0 1-3.33-.54Zm-2.7-2.76a.1.1 0 0 0-.16 0 3.91 3.91 0 0 0 0 5.3.1.1 0 0 0 .16 0 3.91 3.91 0 0 0 0-5.3Zm-1.71-.93a.11.11 0 0 0-.08-.14 3.68 3.68 0 0 0-4.47 2.66c-.02.06.02.12.08.14a3.74 3.74 0 0 0 4.47-2.65Zm7.46 1.67a3.68 3.68 0 0 0-4.12-1.8.11.11 0 0 0-.08.13 3.74 3.74 0 0 0 4.47 2.66c.06-.02.1-.08.08-.14a3.9 3.9 0 0 0-.35-.85Zm1.85-5.59a.11.11 0 0 0-.18.05 5.46 5.46 0 0 1-2.12 2.7.13.13 0 0 0 0 .22 5.27 5.27 0 0 1 2.12 2.7c.03.08.12.1.18.05A3.87 3.87 0 0 0 19.93 10c0-1.14-.48-2.16-1.25-2.86ZM3.5 7.19a.11.11 0 0 0-.18-.05A3.87 3.87 0 0 0 2.07 10c0 1.14.48 2.16 1.25 2.86.06.05.15.03.18-.05a5.47 5.47 0 0 1 2.12-2.7.13.13 0 0 0 0-.22A5.27 5.27 0 0 1 3.5 7.2Zm2.3-1.02c-.32 0-.61.04-.9.11a.11.11 0 0 0-.08.14A3.68 3.68 0 0 0 9.3 9.07c.06 0 .1-.07.08-.13A3.74 3.74 0 0 0 5.8 6.17Zm10.4 0a3.74 3.74 0 0 0-3.57 2.77c-.01.06.02.12.08.14a3.68 3.68 0 0 0 4.47-2.66.11.11 0 0 0-.08-.14 3.63 3.63 0 0 0-.9-.1Zm-5.12-3.46a.1.1 0 0 0-.16 0 3.91 3.91 0 0 0 0 5.3.1.1 0 0 0 .16 0 3.91 3.91 0 0 0 0-5.3ZM9.6 1.9c.06-.06.03-.16-.04-.18a3.62 3.62 0 0 0-3.03.31A3.81 3.81 0 0 0 4.75 4.6c-.01.08.06.15.14.13a5.1 5.1 0 0 1 3.33.54c.08.04.18-.02.18-.1A5.45 5.45 0 0 1 9.6 1.9Zm5.85.13a3.62 3.62 0 0 0-3.03-.31c-.07.02-.1.12-.04.18a5.4 5.4 0 0 1 1.21 3.24c0 .1.1.15.18.1a5.07 5.07 0 0 1 3.33-.53c.08.02.15-.05.14-.13a3.81 3.81 0 0 0-1.79-2.55Z" clip-rule="evenodd"></path>
+</svg> <span>Created with Obvious</span></a><script data-obvious-analytics="">
+(function(){
+  // Config from server
+  var T="eyJyZXNvdXJjZVR5cGUiOiJob3N0ZWRfYXBwIiwicmVzb3VyY2VJZCI6InByal8xUVhZMG85QyIsImlhdCI6MTc3NDM2NzM1NDMwNn0.lGPZAr94oEG6G1F8qw8VUKxe2EgiwFVCGWN_TDe7hrY",R="hosted_app",I="prj_1QXY0o9C",E="https://api.app.obvious.ai/prepare/a/e";
+
+  // For hosted apps: skip analytics when in an iframe (internal dashboard view)
+  // Direct access (window.self === window.top) is tracked, iframe embeds are not
+  if(R==="hosted_app"&&window.self!==window.top)return;
+
+  // Generate or retrieve visitor ID (cross-session, localStorage)
+  function gV(){
+    try{
+      var v=localStorage.getItem("_oa_v");
+      if(!v){v=rI();localStorage.setItem("_oa_v",v)}
+      return v
+    }catch(e){return rI()}
+  }
+
+  // Generate or retrieve session ID (per-tab, sessionStorage)
+  function gS(){
+    try{
+      var s=sessionStorage.getItem("_oa_s");
+      if(!s){s=rI();sessionStorage.setItem("_oa_s",s)}
+      return s
+    }catch(e){return rI()}
+  }
+
+  // Random ID generator (simple, no crypto dependency)
+  function rI(){
+    return "xxxxxxxxxxxx".replace(/x/g,function(){
+      return(Math.random()*16|0).toString(16)
+    })+Date.now().toString(36)
+  }
+
+  // Parse user agent for device info
+  function dI(){
+    var ua=navigator.userAgent||"";
+    var d="desktop",b="other",o="other";
+    
+    // Device type
+    if(/Mobile|Android.*Mobile|iPhone|iPod/.test(ua))d="mobile";
+    else if(/iPad|Android(?!.*Mobile)|Tablet/.test(ua))d="tablet";
+    
+    // Browser - lowercase for consistency
+    if(/Firefox\//.test(ua))b="firefox";
+    else if(/Edg\//.test(ua))b="edge";
+    else if(/Chrome\//.test(ua))b="chrome";
+    else if(/Safari\//.test(ua)&&!/Chrome/.test(ua))b="safari";
+    
+    // OS - lowercase for consistency
+    if(/Windows/.test(ua))o="windows";
+    else if(/Mac OS/.test(ua))o="macos";
+    else if(/Linux/.test(ua))o="linux";
+    else if(/Android/.test(ua))o="android";
+    else if(/iOS|iPhone|iPad/.test(ua))o="ios";
+    
+    return{deviceType:d,browser:b,os:o}
+  }
+
+  // Send event to server
+  function sE(t,n,d,dur){
+    var di=dI();
+    var p={
+      token:T,
+      resourceType:R,
+      resourceId:I,
+      eventType:t,
+      visitorId:gV(),
+      sessionId:gS(),
+      path:location.pathname,
+      referrer:document.referrer||undefined,
+      deviceType:di.deviceType,
+      browser:di.browser,
+      os:di.os
+    };
+    if(n)p.eventName=n;
+    if(d)p.eventData=d;
+    if(dur)p.duration=dur;
+
+    // Always use fetch with keepalive for reliable delivery during page unload
+    // (sendBeacon has CORS issues - it always sends credentials)
+    fetch(E,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(p),
+      keepalive:true,
+      mode:"cors",
+      credentials:"omit"
+    }).catch(function(e){if(console&&console.warn)console.warn("[OA] Event failed:",e)})
+  }
+
+  // Track page view on load
+  var st=Date.now();
+  var lS=false; // Guard to prevent duplicate page_leave events
+  sE("page_view");
+
+  // Track page leave with duration (guarded to prevent duplicates)
+  function oL(){
+    if(lS)return;
+    lS=true;
+    sE("page_leave",null,null,Date.now()-st)
+  }
+  
+  // Use multiple events for better coverage
+  window.addEventListener("pagehide",oL);
+  window.addEventListener("beforeunload",oL);
+  document.addEventListener("visibilitychange",function(){
+    if(document.visibilityState==="hidden")oL()
+  });
+
+  // SPA navigation support (for hosted apps)
+  var lp=location.pathname;
+  function cN(){
+    if(location.pathname!==lp){
+      oL(); // Send leave for old page
+      lp=location.pathname;
+      st=Date.now();
+      lS=false; // Reset guard for new page
+      sE("page_view"); // Send view for new page
+    }
+  }
+  
+  // Listen for navigation events
+  window.addEventListener("popstate",cN);
+  
+  // Intercept pushState/replaceState for SPA navigation
+  var oPS=history.pushState,oRS=history.replaceState;
+  history.pushState=function(){oPS.apply(this,arguments);cN()};
+  history.replaceState=function(){oRS.apply(this,arguments);cN()};
+
+  // Expose custom event tracking (optional)
+  window.__oa={
+    track:function(name,data){sE("custom",name,data)}
+  };
+})();
+</script><div class="Kudos"><template shadowrootmode="closed"><style></style><div id="KudosTooltipOutlet"></div></template><style>@font-face{font-family:"Inter";font-style:normal;font-weight:400;font-display:swap;src:url(https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa2JL7W0Q5n-wU.woff2) format("woff2");unicode-range:U+0460-052F,U+1C80-1C88,U+20B4,U+2DE0-2DFF,U+A640-A69F,U+FE2E-FE2F}@font-face{font-family:"Inter";font-style:normal;font-weight:400;font-display:swap;src:url(https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa0ZL7W0Q5n-wU.woff2) format("woff2");unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}@font-face{font-family:"Inter";font-style:normal;font-weight:400;font-display:swap;src:url(https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa2ZL7W0Q5n-wU.woff2) format("woff2");unicode-range:U+1F00-1FFF}@font-face{font-family:"Inter";font-style:normal;font-weight:400;font-display:swap;src:url(https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1pL7W0Q5n-wU.woff2) format("woff2");unicode-range:U+0370-0377,U+037A-037F,U+0384-038A,U+038C,U+038E-03A1,U+03A3-03FF}@font-face{font-family:"Inter";font-style:normal;font-weight:400;font-display:swap;src:url(https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa2pL7W0Q5n-wU.woff2) format("woff2");unicode-range:U+0102-0103,U+0110-0111,U+0128-0129,U+0168-0169,U+01A0-01A1,U+01AF-01B0,U+0300-0301,U+0303-0304,U+0308-0309,U+0323,U+0329,U+1EA0-1EF9,U+20AB}@font-face{font-family:"Inter";font-style:normal;font-weight:400;font-display:swap;src:url(https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa25L7W0Q5n-wU.woff2) format("woff2");unicode-range:U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}@font-face{font-family:"Inter";font-style:normal;font-weight:400;font-display:swap;src:url(https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7W0Q5nw.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}@font-face{font-family:"Inter";font-style:normal;font-weight:500;font-display:swap;src:url(https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa2JL7W0Q5n-wU.woff2) format("woff2");unicode-range:U+0460-052F,U+1C80-1C88,U+20B4,U+2DE0-2DFF,U+A640-A69F,U+FE2E-FE2F}@font-face{font-family:"Inter";font-style:normal;font-weight:500;font-display:swap;src:url(https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa0ZL7W0Q5n-wU.woff2) format("woff2");unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}@font-face{font-family:"Inter";font-style:normal;font-weight:500;font-display:swap;src:url(https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa2ZL7W0Q5n-wU.woff2) format("woff2");unicode-range:U+1F00-1FFF}@font-face{font-family:"Inter";font-style:normal;font-weight:500;font-display:swap;src:url(https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1pL7W0Q5n-wU.woff2) format("woff2");unicode-range:U+0370-0377,U+037A-037F,U+0384-038A,U+038C,U+038E-03A1,U+03A3-03FF}@font-face{font-family:"Inter";font-style:normal;font-weight:500;font-display:swap;src:url(https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa2pL7W0Q5n-wU.woff2) format("woff2");unicode-range:U+0102-0103,U+0110-0111,U+0128-0129,U+0168-0169,U+01A0-01A1,U+01AF-01B0,U+0300-0301,U+0303-0304,U+0308-0309,U+0323,U+0329,U+1EA0-1EF9,U+20AB}@font-face{font-family:"Inter";font-style:normal;font-weight:500;font-display:swap;src:url(https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa25L7W0Q5n-wU.woff2) format("woff2");unicode-range:U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}@font-face{font-family:"Inter";font-style:normal;font-weight:500;font-display:swap;src:url(https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7W0Q5nw.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}@font-face{font-family:"Inter";font-style:normal;font-weight:600;font-display:swap;src:url(https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa2JL7W0Q5n-wU.woff2) format("woff2");unicode-range:U+0460-052F,U+1C80-1C88,U+20B4,U+2DE0-2DFF,U+A640-A69F,U+FE2E-FE2F}@font-face{font-family:"Inter";font-style:normal;font-weight:600;font-display:swap;src:url(https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa0ZL7W0Q5n-wU.woff2) format("woff2");unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}@font-face{font-family:"Inter";font-style:normal;font-weight:600;font-display:swap;src:url(https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa2ZL7W0Q5n-wU.woff2) format("woff2");unicode-range:U+1F00-1FFF}@font-face{font-family:"Inter";font-style:normal;font-weight:600;font-display:swap;src:url(https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1pL7W0Q5n-wU.woff2) format("woff2");unicode-range:U+0370-0377,U+037A-037F,U+0384-038A,U+038C,U+038E-03A1,U+03A3-03FF}@font-face{font-family:"Inter";font-style:normal;font-weight:600;font-display:swap;src:url(https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa2pL7W0Q5n-wU.woff2) format("woff2");unicode-range:U+0102-0103,U+0110-0111,U+0128-0129,U+0168-0169,U+01A0-01A1,U+01AF-01B0,U+0300-0301,U+0303-0304,U+0308-0309,U+0323,U+0329,U+1EA0-1EF9,U+20AB}@font-face{font-family:"Inter";font-style:normal;font-weight:600;font-display:swap;src:url(https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa25L7W0Q5n-wU.woff2) format("woff2");unicode-range:U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}@font-face{font-family:"Inter";font-style:normal;font-weight:600;font-display:swap;src:url(https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7W0Q5nw.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}@font-face{font-family:"Inter";font-style:normal;font-weight:700;font-display:swap;src:url(https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa2JL7W0Q5n-wU.woff2) format("woff2");unicode-range:U+0460-052F,U+1C80-1C88,U+20B4,U+2DE0-2DFF,U+A640-A69F,U+FE2E-FE2F}@font-face{font-family:"Inter";font-style:normal;font-weight:700;font-display:swap;src:url(https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa0ZL7W0Q5n-wU.woff2) format("woff2");unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}@font-face{font-family:"Inter";font-style:normal;font-weight:700;font-display:swap;src:url(https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa2ZL7W0Q5n-wU.woff2) format("woff2");unicode-range:U+1F00-1FFF}@font-face{font-family:"Inter";font-style:normal;font-weight:700;font-display:swap;src:url(https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1pL7W0Q5n-wU.woff2) format("woff2");unicode-range:U+0370-0377,U+037A-037F,U+0384-038A,U+038C,U+038E-03A1,U+03A3-03FF}@font-face{font-family:"Inter";font-style:normal;font-weight:700;font-display:swap;src:url(https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa2pL7W0Q5n-wU.woff2) format("woff2");unicode-range:U+0102-0103,U+0110-0111,U+0128-0129,U+0168-0169,U+01A0-01A1,U+01AF-01B0,U+0300-0301,U+0303-0304,U+0308-0309,U+0323,U+0329,U+1EA0-1EF9,U+20AB}@font-face{font-family:"Inter";font-style:normal;font-weight:700;font-display:swap;src:url(https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa25L7W0Q5n-wU.woff2) format("woff2");unicode-range:U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}@font-face{font-family:"Inter";font-style:normal;font-weight:700;font-display:swap;src:url(https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7W0Q5nw.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}@font-face{font-family:"Inter";font-style:normal;font-weight:800;font-display:swap;src:url(https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa2JL7W0Q5n-wU.woff2) format("woff2");unicode-range:U+0460-052F,U+1C80-1C88,U+20B4,U+2DE0-2DFF,U+A640-A69F,U+FE2E-FE2F}@font-face{font-family:"Inter";font-style:normal;font-weight:800;font-display:swap;src:url(https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa0ZL7W0Q5n-wU.woff2) format("woff2");unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}@font-face{font-family:"Inter";font-style:normal;font-weight:800;font-display:swap;src:url(https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa2ZL7W0Q5n-wU.woff2) format("woff2");unicode-range:U+1F00-1FFF}@font-face{font-family:"Inter";font-style:normal;font-weight:800;font-display:swap;src:url(https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1pL7W0Q5n-wU.woff2) format("woff2");unicode-range:U+0370-0377,U+037A-037F,U+0384-038A,U+038C,U+038E-03A1,U+03A3-03FF}@font-face{font-family:"Inter";font-style:normal;font-weight:800;font-display:swap;src:url(https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa2pL7W0Q5n-wU.woff2) format("woff2");unicode-range:U+0102-0103,U+0110-0111,U+0128-0129,U+0168-0169,U+01A0-01A1,U+01AF-01B0,U+0300-0301,U+0303-0304,U+0308-0309,U+0323,U+0329,U+1EA0-1EF9,U+20AB}@font-face{font-family:"Inter";font-style:normal;font-weight:800;font-display:swap;src:url(https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa25L7W0Q5n-wU.woff2) format("woff2");unicode-range:U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}@font-face{font-family:"Inter";font-style:normal;font-weight:800;font-display:swap;src:url(https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7W0Q5nw.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}.Kudos{z-index:2147483647;position:fixed;box-sizing:border-box;margin:0px;padding:0px;right:0px;bottom:0px;font-size:16px;font-family:"Inter",sans-serif;line-height:1;pointer-events:auto !important;-webkit-font-smoothing:antialiased}.Kudos-Mobile{font-size:16px;font-family:"Inter",sans-serif;line-height:1;pointer-events:auto !important;-webkit-font-smoothing:antialiased}</style></div></body></html>
