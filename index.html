@@ -123,8 +123,8 @@
       height: calc(100vh - 68px);
       min-height: 580px;
       max-height: 860px;
-      overflow: hidden;
-      display: flex; align-items: flex-end;
+      
+      display: flex; align-items: center;
     }
     .hero-img {
       position: absolute; inset: 0;
@@ -141,12 +141,24 @@
         rgba(0,0,0,0.72) 100%
       );
     }
-    .hero-content {
+    \.hero-content {
       position: relative;
       z-index: 2;
-      max-width: 720px;
-      padding: 0 32px 72px;
+      max-width: 760px;
+      padding: 88px 32px 88px;
     }
+    
+    \.hero-content h1 {
+      font-size: clamp(38px, 5vw, 60px);
+      line-height: 1.06;
+      letter-spacing: -0.02em;
+      margin-bottom: 16px;
+      text-shadow: 0 6px 28px rgba(0,0,0,0.35);
+    }
+    @media (max-height: 720px) {
+      .hero-content { padding-top: 80px; padding-bottom: 56px; }
+    }
+
     .hero-content h1 {
       font-size: clamp(40px, 5vw, 64px);
       line-height: 1.05;
@@ -157,7 +169,7 @@
     @media (max-width: 520px) {
       .hero-content { padding: 0 22px 64px; }
       .hero-content h1 { font-size: 38px; }
-      .hero-sub { font-size: 16px; }
+      .hero-sub { max-width: 560px; }
     }
     @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
     .hero h1 {
@@ -171,14 +183,7 @@
       margin-bottom: 24px;
     }
     .hero h1 em { font-style: italic; color: rgba(255,255,255,0.85); }
-    .hero-sub {
-      font-size: 17px;
-      color: rgba(255,255,255,0.82);
-      line-height: 1.6;
-      max-width: 480px;
-      margin-bottom: 36px;
-      font-weight: 300;
-    }
+    .hero-sub { max-width: 560px; }
     .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; }
     .btn-primary {
       background: var(--red);
@@ -822,7 +827,7 @@
 
   <!-- HERO -->
   <section class="hero">
-    <img src="assets/hero-team.jpg" alt="Chick-fil-A team" class="hero-img">
+    <img src="img-team-kitchen.jpg" alt="Chick-fil-A team" class="hero-img">
     <div class="hero-overlay"></div>
     <div class="hero-content">
           <h1>Something <em>different</em> is coming to Hueytown.</h1>
@@ -898,7 +903,7 @@
       </div>
       <div class="culture-grid">
         <div class="culture-photo-tall reveal visible">
-          <img src="img-team-kitchen.jpg" alt="Team members in the kitchen">
+          <img src="img-team-exterior.jpg" alt="Team members in the kitchen">
         </div>
         <div class="culture-cards-stack">
           <div class="culture-card reveal visible">
@@ -1026,7 +1031,7 @@
 
   
   <!-- COMMUNITY PARTNERS -->
-  <section class="partners" id="partners">
+  <section class="partners" id="community">
     <div class="inner">
       <p class="section-label reveal visible">Community Partners</p>
       <h2 class="section-title reveal visible">Rooted in <em>Hueytown.</em></h2>
