@@ -1,0 +1,14 @@
+{
+  "redirects": [
+    {
+      "source": "/benefits",
+      "destination": "https://hueytown-team-care.agenttimblog.chatgpt.site/",
+      "permanent": false
+    },
+    {
+      "source": "/benefits/",
+      "destination": "https://hueytown-team-care.agenttimblog.chatgpt.site/",
+      "permanent": false
+    }
+  ]
+}
