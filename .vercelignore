@@ -1,2 +1,5 @@
-# Migration source is not a public static route.
-team-care/
+node_modules
+.git
+.env*
+team-care/.env*
+team-care/tests

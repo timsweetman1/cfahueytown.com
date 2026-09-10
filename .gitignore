@@ -1,0 +1,10 @@
+node_modules/
+public/
+team-care/dist/
+.env
+.env.*
+!.env.example
+!team-care/.env.example
+*.sqlite
+*.sqlite3
+*export*.json

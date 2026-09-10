@@ -1,0 +1,20 @@
+{
+  "name": "cfahueytown",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "24.x"
+  },
+  "scripts": {
+    "build": "cd team-care && npm run build",
+    "test": "node --test team-care/tests/*.test.mjs",
+    "db:migrate": "node team-care/scripts/migrate.mjs",
+    "db:import": "node team-care/scripts/import.mjs"
+  },
+  "dependencies": {
+    "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8"
+  }
+}

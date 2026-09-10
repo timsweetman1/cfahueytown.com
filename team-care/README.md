@@ -1,44 +1,51 @@
-# Hueytown Team Care
+# Team Care — Vercel migration (draft; not production-ready)
 
-Source for the employee portal and leader pilot, staged in the existing cfahueytown.com GitHub repository. This is the complete application source, including its uniform photos, password gate, request dashboard, database migrations and Groq integration. No runtime secrets or employee request records are included.
+This branch replaces the Cloudflare Worker and D1 runtime with a Vercel Node.js function and Postgres. PR #6 must stay unmerged until a deployed preview passes real browser sign-in and request testing. No preview has been verified yet.
 
-## Current and intended deployment
+## Runtime
 
-Today, cfahueytown.com/benefits redirects to the separately hosted portal. That redirect remains intact in this branch. Team Care is a Cloudflare Worker application, not a static HTML site: copying its web directory onto Vercel would bypass the password gate and break request storage and leader identity.
+Root `npm ci && npm run build` creates only the restaurant's existing public files in `public/`. Team Care's 23 assets are embedded in a server module and never copied to that public directory. `/benefits/*` rewrites to `api/team-care.js`. Employee and leader authorization run before protected assets or APIs are served. Root `vercel.json` is the proposed native routing for the preview; it must not reach production before validation.
 
-Target: employees stay at cfahueytown.com/benefits, with assets, login/logout, requests and API calls underneath that path. The homepage and recruiting pages stay at their current addresses. GitHub changes will be reviewed and tested before Vercel publishes them.
+Postgres uses `pg` with a bounded pool. Request creation/deduplication and daily limits use transactions and advisory locks; status updates and audit insertions commit together. Database operations use bound values. Notification retries retain the original provider idempotency key and do not imply delivery. Groq remains a constrained category selector, not a booking or payment agent.
 
-The root .vercelignore excludes this staged application from the current static website deployment. Do not remove that exclusion until a protected runtime, routing, storage and authentication are verified.
+## Authentication and secrets
 
-## Build and checks
+No identity request headers are trusted. Employees enter the shared password; leaders enter an individual email/password. Passwords are verified with salted scrypt hashes. HMAC-signed, eight-hour Secure/HttpOnly/SameSite cookies grant sessions. Every leader request checks active Postgres membership and the current password-hash version. Removing a leader or rotating their hash revokes access. Rotating the session signing secret revokes all sessions. Login attempts are throttled in Postgres by account (employee login uses a shared bucket); this favors protection over availability and can temporarily lock the shared login after ten attempts.
 
-Requires a current Node.js release with node:sqlite (Node 24 works).
+Configure only environment variables, separately for Preview and Production:
 
-    cd team-care
-    npm ci
-    npm run build
-    npm test
+- APP_ORIGIN: exact HTTPS origin of that deployment, without a trailing slash. No automatic trust of Host or forwarded headers for the auth origin.
+- DATABASE_URL: TLS-enabled pooled Neon or Supabase Postgres URL. Preview must use a separate database with synthetic records.
+- TEAM_SESSION_SECRET: at least 32 cryptographically random characters; separate per environment.
+- TEAM_PASSWORD_HASH: salted scrypt hash of the existing employee password.
+- LEADER_PASSWORD_HASHES: JSON mapping each approved lowercase leader email to its own salted scrypt hash. Never reuse the employee password for a leader account. Generate/deliver individual credentials securely.
+- RESEND_API_KEY and NOTIFY_FROM: verified email sender. Intake remains disabled until configured. Uniform requests include 06123@chick-fil-a.com.
+- GROQ_API_KEY, GROQ_MODEL and GROQ_ENABLED: model selected in the connected account; leave disabled until configured and tested.
 
-The build emits a Worker and embeds employee-facing assets so the authentication gate protects them. Tests use an in-memory SQLite database and mock provider responses. They do not send email, call Groq, or book services.
+Use `hashPassword` from `server/auth.js` in a secure provisioning environment; never commit passwords, hashes, session keys, database URLs or employee exports. There is no public registration or automatic elevation. Seed `care_leaders` through authorized database administration. Preserve approved emails `t@cfahueytown.com` and `06123@chick-fil-a.com`.
 
-## Move-to-domain checklist
+## Data migration
 
-1. Connect the existing Vercel project and inspect its production environment, routes and deployment settings. Do not create a second public restaurant site.
-2. Choose and implement the server runtime path. The current Worker entry point and D1 binding cannot simply run as a Vercel Node function. Either retain a supported Cloudflare backend with authenticated routing or port storage and the Worker handler to a Vercel-compatible backend.
-3. Preserve request data. Export/import only through authorized storage access, verify row counts and IDs, and prevent submissions during any final data cutover. Keep the existing database until the replacement is verified.
-4. Replace or integrate dispatch-owned leader identity. Vercel must not trust client-supplied oai-authenticated-user-* headers. Those headers are trusted only behind the existing Sites dispatcher. Preserve verified email allowlisting for t@cfahueytown.com and 06123@chick-fil-a.com.
-5. Move runtime secrets through server-side environment settings; do not commit them. Existing employee sessions can require a fresh login after moving domains. Keep secure, HttpOnly session cookies and cross-site request protection.
-6. Make every path work under /benefits: HTML links, form actions, scripts/styles, images, fetch URLs, sign-in callbacks, redirects and email links. Test trailing slash behavior and the bare/www domain redirect. Do not use an iframe as a substitute for a working integration.
-7. Test anonymous/password/leader access, rejected cross-site submissions, read/write requests, duplicate submission handling, email failure states, practice records, Groq fallback, and asset protection. Check real iPhone/Android sign-in and one authorized notification delivery.
-8. Switch the existing /benefits redirect only after the integrated preview passes. Verify the public restaurant homepage still works and keep a rollback to the current redirect.
+`DATABASE_URL=... npm run db:migrate` creates schema once, under an advisory transaction lock. It does not drop or overwrite existing tables.
 
-## Pilot state
+Source inspected September 10, 2026: care_requests 0 rows; care_audit 0; care_ai_budget 0; care_usage 3. These are inspection-time counts, not proof of a final migrated state. Source leader allowlist contains the two emails above, stored as configuration rather than a D1 table. Identity headers/sessions are deliberately not migrated; leaders need real new credentials.
 
-- Employee password is configured on the current host, not in source.
-- The leader dashboard supports individually authenticated, approved accounts.
-- TEST requests send no email and are excluded from real counts.
-- No cash payments, grants or reimbursements are offered.
-- Groq code is present but needs the owner's account key and activation. It only selects approved categories, with consent, a timeout, daily cap and local fallback. It calls Groq, not the OpenAI API. The configured Qwen model is a preview model for evaluation and must be rechecked at activation.
-- Real request intake remains closed until an email sender is connected and tested. Uniform email drafts remain available.
+Before cutover, pause source writes, re-export all four tables and append care_leaders as an array of `{email, active:true}` objects. Keep the export in restricted storage outside Git. Require all columns, including is_test; do not drop IDs, assignments, revisions, notification metadata, or audits. Set MIGRATION_INPUT to that JSON path and MIGRATION_CONFIRM=source-frozen; run `npm run db:import` against the empty production destination. It imports all five tables in one transaction, verifies every value and row count, and rejects orphan audits or a nonempty destination. It sends no emails. If validation fails, it rolls back. Never put production employee records into the preview database.
 
-The root routing has deliberately not been changed to expose an incomplete migration.
+Actual destination provisioning and import are BLOCKED until Neon/Supabase and Vercel are connected. No data migration is claimed complete.
+
+## Required preview acceptance (all pending unless indicated)
+
+1. Connect the existing Vercel project to the PR branch; create an isolated preview Postgres database and set Preview environment variables. Deploy, set APP_ORIGIN to the exact generated preview origin, then redeploy if necessary.
+2. Initialize schema and seed approved leader accounts with individually provisioned credentials.
+3. Open the clickable HTTPS preview in a real browser. Wrong employee password fails; correct password opens the portal. Navigation, images, mobile layout, logout and reload work under /benefits/.
+4. Employee session cannot open leader records or admin APIs. Forged identity headers do not grant access. Individual leader login succeeds; removed leader loses access. Cross-origin mutation fails.
+5. Submit a synthetic employee request through the actual browser form. Verify persistence after reload, correct leader visibility, assignment/status changes and audit entries. Duplicate submission must not duplicate the request or notification. Check email receipt, not just provider acceptance, with an authorized test recipient.
+6. Test a uniform request reaches 06123@chick-fil-a.com, using an explicitly approved test email; verify no cash request path exists.
+7. Test Groq success, consent refusal and failure fallback. Confirm keys are absent from page source and network responses.
+8. Record preview URL, tested commit, browser/date, actual outcomes and remaining issues in PR #6. Request Tim's review. Do not merge based on local automated tests alone.
+9. After approval, freeze/export/import production data and verify it; deploy native routing; repeat production smoke checks. Keep the old portal available during transition. Roll back routing if needed; reconcile any new destination records before returning intake to the source.
+
+## Validation performed
+
+Build passed. Seven automated tests passed, including scrypt/session tampering and revocation, spoofed headers, role isolation and request/audit transactions on local PGlite (Postgres engine). Email was mocked. This is not hosted Postgres, Vercel, real-browser, real-email, or real-Groq validation.
