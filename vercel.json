@@ -2,12 +2,12 @@
   "buildCommand": "npm run build",
   "outputDirectory": "public",
   "redirects": [
+    {"source": "/orientation", "destination": "/orientation/start", "permanent": false},
     {"source": "/benefits", "destination": "https://hueytown-team-care.agenttimblog.chatgpt.site/", "permanent": false},
     {"source": "/benefits/", "destination": "https://hueytown-team-care.agenttimblog.chatgpt.site/", "permanent": false}
   ],
   "rewrites": [
     {"source": "/orientation/service/:op", "destination": "/api/orientation?op=:op"},
-    {"source": "/orientation", "destination": "/orientation-ui/index.html"},
     {"source": "/orientation/:path*", "destination": "/orientation-ui/index.html"}
   ],
   "headers": [
