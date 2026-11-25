@@ -1,4 +1,6 @@
 {
+  "buildCommand": "npm run build",
+  "outputDirectory": "public",
   "redirects": [
     {
       "source": "/benefits",
@@ -20,5 +22,57 @@
       "destination": "https://hueytown-orientation.agenttimblog.chatgpt.site/",
       "permanent": false
     }
-  ]
+  ],
+  "rewrites": [
+    {
+      "source": "/orientation/service/:op",
+      "destination": "/api/orientation?op=:op"
+    },
+    {
+      "source": "/orientation",
+      "destination": "/orientation-ui/index.html"
+    },
+    {
+      "source": "/orientation/:path*",
+      "destination": "/orientation-ui/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/orientation-ui/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/orientation/:path*",
+      "headers": [
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    }
+  ],
+  "functions": {
+    "api/orientation.js": {
+      "includeFiles": "orientation/server/**",
+      "maxDuration": 30
+    }
+  }
 }
