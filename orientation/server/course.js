@@ -82,6 +82,7 @@ export async function progress(db,email,input){
 export async function roster(db){
   return (await db.query(`SELECT a.email,a.active,a.manager,a.password_hash IS NOT NULL AS enrolled,
     coalesce(max(p.step+1) FILTER (WHERE p.passed),0) AS progress,count(*) FILTER (WHERE NOT p.passed) AS retries,
-    max(p.at) AS updated FROM orientation.accounts a LEFT JOIN orientation.activity p ON a.email=p.email AND p.version=$1
-    GROUP BY a.email ORDER BY a.created_at DESC`,[version])).rows;
+    max(p.at) AS updated, i.sent_at AS email_sent, i.requested_at AS email_requested,
+    a.invite_expires FROM orientation.accounts a LEFT JOIN orientation.invitation_emails i ON i.email=a.email LEFT JOIN orientation.activity p ON a.email=p.email AND p.version=$1
+    GROUP BY a.email,i.sent_at,i.requested_at ORDER BY a.created_at DESC`,[version])).rows;
 }

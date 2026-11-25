@@ -1,4 +1,4 @@
-import {authorizeNotifier,completionAlerts} from '../orientation/server/alerts.js';
+import {authorizeNotifier,completionAlerts,invitationMail,dispatchInvitation} from '../orientation/server/alerts.js';
 import {database} from '../orientation/server/store.js';
 import {account,activate,digest,limit,login,manage,normalize,requireValue} from '../orientation/server/accounts.js';
 import {baseline,config,course,fetchBytes,importFile,progress,released,roster,total} from '../orientation/server/course.js';
@@ -22,8 +22,10 @@ export async function handle(req,res,getDb=database){
     const token=(req.headers.cookie||'').split(';').map(c=>c.trim()).find(c=>c.startsWith(cookieName+'='))?.slice(cookieName.length+1);
     if(op==='state'&&!token)return send(res,200,{user:null});
     if(op==='alerts'){
-      authorizeNotifier(req.headers.authorization);
-      return send(res,200,await completionAlerts(await getDb(),input));
+      const workerKey=authorizeNotifier(req.headers.authorization);
+      const db=await getDb();
+      return send(res,200,['list','sent'].includes(input.action)
+        ?await completionAlerts(db,input):await invitationMail(db,input,workerKey));
     }
     const db=await getDb();
     if(op==='import'){
@@ -49,7 +51,11 @@ export async function handle(req,res,getDb=database){
     requireValue(user,401,'Sign in to continue.');
     if(op==='roster'||op==='manage'){
       requireValue(user.manager,403,'Manager sign-in required.');
-      return send(res,200,op==='roster'?{rows:await roster(db),total}:await manage(db,input,config));
+      if(op==='roster')return send(res,200,{rows:await roster(db),total});
+      // Only individual mailbox addresses can be grant targets.
+      requireValue(!/[,;<>\s]/.test(normalize(input.email)),400,'Enter one learner email address.');
+      const job=await manage(db,input,config);
+      return send(res,200,job.id?await dispatchInvitation(db,job):job);
     }
     if(op==='course'){
       const result=await course(db);

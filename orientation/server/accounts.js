@@ -1,4 +1,4 @@
-import {createHash,randomBytes,timingSafeEqual,scrypt as derive} from 'node:crypto';
+import {createHash,randomUUID,randomBytes,timingSafeEqual,scrypt as derive} from 'node:crypto';
 import {promisify} from 'node:util';
 import {transaction} from './store.js';
 const scrypt=promisify(derive);
@@ -66,10 +66,17 @@ export async function manage(db,input,config) {
   const email=normalize(input.email),action=input.action;
   requireValue(validEmail(email),400,'Enter a valid learner email.');
   requireValue(!config.managers.some(m=>m.addressHash===digest(email)),403,'Manager accounts cannot be changed here.');
-  requireValue(['invite','reset','revoke'].includes(action),400,'Choose an invitation action.');
+  requireValue(['invite','resend','reset','revoke'].includes(action),400,'Choose an invitation action.');
   return transaction(db,async client=>{
-    const token=secret(), key=digest(token);
-    if(action==='invite') {
+    const emailInvite=input.delivery==='email'&&action!=='revoke';
+    await client.query('SELECT pg_advisory_xact_lock(hashtext($1))',[email]);
+    if(emailInvite&&action==='invite'){
+      const pending=await client.query(`SELECT i.id FROM orientation.invitation_emails i JOIN orientation.accounts a USING(email)
+        WHERE i.email=$1 AND a.active AND a.password_hash IS NULL AND a.invite_expires>now()`,[email]);
+      if(pending.rows.length)return {email,id:pending.rows[0].id};
+    }
+    const token=secret(), key=emailInvite?null:digest(token);
+    if(action==='invite'||action==='resend') {
       const changed=await client.query(`INSERT INTO orientation.accounts AS a(email,invite_hash,invite_expires)
         VALUES($1,$2,now()+interval '7 days') ON CONFLICT(email) DO UPDATE SET invite_hash=$2,
         invite_expires=excluded.invite_expires,active=true,password_hash=NULL
@@ -83,6 +90,13 @@ export async function manage(db,input,config) {
       requireValue(changed.rowCount,404,'Learner not found.');
     }
     await client.query('DELETE FROM orientation.sessions WHERE email=$1',[email]);
+    if(emailInvite){
+      const id=randomUUID();
+      await client.query(`INSERT INTO orientation.invitation_emails(email,id) VALUES($1,$2)
+        ON CONFLICT(email) DO UPDATE SET id=excluded.id,requested_at=now(),sent_at=NULL`,[email,id]);
+      return {email,id};
+    }
+    await client.query('DELETE FROM orientation.invitation_emails WHERE email=$1',[email]);
     return action==='revoke'?{}:{token,email};
   });
 }

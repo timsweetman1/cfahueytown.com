@@ -32,25 +32,34 @@ function SignIn({onSignedIn}:{onSignedIn:()=>Promise<void>}){
     {message&&<p role="alert" className="notice">{message}</p>}
     <footer>{token?<a href={start} onClick={()=>sessionStorage.removeItem('orientation-setup')}>Already have a password? Sign in</a>:'First time here or forgot your password? Ask your orientation manager for a personal setup link.'}</footer></main></>;
 }
-type Row={email:string;active:boolean;manager:boolean;enrolled:boolean;progress:number;retries:string;updated:string|null};
+type Row={email:string;active:boolean;manager:boolean;enrolled:boolean;progress:number;retries:string;updated:string|null;email_sent:string|null;email_requested:string|null;invite_expires:string|null};
 function Records({signOut}:{signOut:()=>void}){
-  const [rows,setRows]=useState<Row[]>([]),[total,setTotal]=useState(0),[email,setEmail]=useState(''),[link,setLink]=useState(''),[target,setTarget]=useState(''),[msg,setMsg]=useState(''),[busy,setBusy]=useState(false);
+  const [rows,setRows]=useState<Row[]>([]),[total,setTotal]=useState(0),[email,setEmail]=useState(''),[msg,setMsg]=useState(''),[busy,setBusy]=useState(false);
   async function refresh(){const d=await call('roster');setRows(d.rows);setTotal(d.total)}
   useEffect(()=>{refresh().catch(e=>setMsg(e.message))},[]);
+  const waiting=rows.some(r=>r.active&&!r.enrolled&&r.email_requested&&!r.email_sent&&Date.parse(r.invite_expires||'')>Date.now());
+  useEffect(()=>{
+    if(!waiting)return;
+    const timer=setInterval(()=>refresh().catch(()=>{}),15000);
+    return ()=>clearInterval(timer);
+  },[waiting]);
   async function change(address:string,action:string){if(busy)return;
     if(action==='revoke'&&!confirm('Remove orientation access for '+address+'? Their progress will be kept.'))return;
-    if(action==='reset'&&!confirm('Create a new password setup link for '+address+' and sign them out?'))return;
-    setBusy(true);setMsg('');setLink('');
-    try{const d=await call('manage',{email:address,action});
-      if(d.token){setTarget(d.email);setLink(location.origin+base+'/activate#invite='+d.token);setEmail('')}
-      else setMsg('Access removed.');await refresh();
+    if(action==='reset'&&!confirm('Email a new password setup link to '+address+' and sign them out?'))return;
+    setBusy(true);setMsg('');
+    try{const d=await call('manage',{email:address,action,delivery:'email'});
+      if(action==='revoke')setMsg('Access removed.');
+      else{
+        setEmail('');
+        setMsg(d.status==='sent'?'Setup email sent to '+d.email+'.':'Setup email queued for '+d.email+'. Pending emails are retried automatically.');
+      }
+      await refresh();
     }catch(e){setMsg((e as Error).message)}finally{setBusy(false)}
   }
   return <><Header signOut={signOut}/><main className="report"><a href={start}>Back to orientation</a><h1>Learner records</h1>
-    <h2>Invite a new hire</h2><form className="fields" onSubmit={e=>{e.preventDefault();change(email,'invite')}}><label>Learner’s email<input type="email" required value={email} onChange={e=>setEmail(e.target.value)}/></label><button disabled={busy} className="primary">Create invitation</button></form>
-    {link&&<div className="invite"><b>Personal setup link for {target}</b><p>Send this link directly to the learner. It expires in seven days and can be used once.</p><a href={link}>{link}</a><p><button onClick={async()=>{try{await navigator.clipboard.writeText(link);setMsg('Setup link copied.')}catch{setMsg('Select and copy the link above.')}}}>Copy setup link</button></p></div>}
+    <h2>Invite a new hire</h2><form className="fields" onSubmit={e=>{e.preventDefault();change(email,'invite')}}><label>Learner’s email<input type="email" required value={email} onChange={e=>setEmail(e.target.value)}/></label><button disabled={busy} className="primary">Grant access &amp; email login</button></form>
     {msg&&<p role="status" className="notice">{msg}</p>}<h2>Progress</h2><div className="tablewrap"><table><thead><tr>{['Email','Account','Course progress','Quiz retries','Last activity','Actions'].map(h=><th key={h}>{h}</th>)}</tr></thead><tbody>
-    {rows.map(r=><tr key={r.email}><td>{r.email}</td><td>{!r.active?'Access removed':r.manager?'Manager':r.enrolled?'Active':'Invited'}</td><td>{r.progress>=total?'Completed and acknowledged':r.progress?r.progress+' / '+total:'Not started'}</td><td>{r.retries}</td><td>{r.updated?new Date(r.updated).toLocaleString():'—'}</td><td>{!r.manager&&(r.active?<><button disabled={busy} onClick={()=>change(r.email,r.enrolled?'reset':'invite')}>{r.enrolled?'Reset password':'New setup link'}</button><button disabled={busy} onClick={()=>change(r.email,'revoke')}>Remove access</button></>:<button disabled={busy} onClick={()=>change(r.email,'invite')}>Restore access</button>)}</td></tr>)}</tbody></table></div></main></>;
+    {rows.map(r=><tr key={r.email}><td>{r.email}</td><td>{!r.active?'Access removed':r.manager?'Manager':r.enrolled?'Active':r.invite_expires&&Date.parse(r.invite_expires)<=Date.now()?'Invitation expired':r.email_sent?'Setup email sent':r.email_requested?'Email queued':'Invited'}</td><td>{r.progress>=total?'Completed and acknowledged':r.progress?r.progress+' / '+total:'Not started'}</td><td>{r.retries}</td><td>{r.updated?new Date(r.updated).toLocaleString():'—'}</td><td>{!r.manager&&(r.active?<><button disabled={busy} onClick={()=>change(r.email,r.enrolled?'reset':'resend')}>{r.enrolled?'Email password reset':'Resend setup email'}</button><button disabled={busy} onClick={()=>change(r.email,'revoke')}>Remove access</button></>:<button disabled={busy} onClick={()=>change(r.email,'invite')}>Restore &amp; email login</button>)}</td></tr>)}</tbody></table></div></main></>;
 }
 function ImportCourse(){
   const [token,setToken]=useState(''),[files,setFiles]=useState<File[]>([]),[message,setMessage]=useState(''),[busy,setBusy]=useState(false);

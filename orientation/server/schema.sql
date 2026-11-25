@@ -31,3 +31,11 @@ INSERT INTO orientation.completion_alerts(id,email,version,completed_at)
   SELECT DISTINCT ON (email,version) request_id,email,version,at
   FROM orientation.activity WHERE version='2026-11-16.1' AND step=60 AND passed
   ORDER BY email,version,at,request_id ON CONFLICT DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS orientation.invitation_emails (
+  email text PRIMARY KEY REFERENCES orientation.accounts(email) ON DELETE CASCADE,
+  id uuid NOT NULL UNIQUE, requested_at timestamptz NOT NULL DEFAULT now(), sent_at timestamptz
+);
+CREATE TABLE IF NOT EXISTS orientation.mail_delivery (
+  singleton boolean PRIMARY KEY CHECK(singleton), endpoint text NOT NULL, wake_key text NOT NULL
+);

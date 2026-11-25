@@ -12,7 +12,7 @@ export async function database() {
   return pool;
 }
 export async function initialize(db) {
-  const check=await db.query("SELECT to_regclass('orientation.completion_alerts') AS installed");
+  const check=await db.query("SELECT to_regclass('orientation.mail_delivery') AS installed");
   if(check.rows[0].installed) return;
   await transaction(db,async client=>{
     await client.query("SELECT pg_advisory_xact_lock(61723091)");
