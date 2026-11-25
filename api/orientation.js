@@ -1,3 +1,4 @@
+import {authorizeNotifier,completionAlerts} from '../orientation/server/alerts.js';
 import {database} from '../orientation/server/store.js';
 import {account,activate,digest,limit,login,manage,normalize,requireValue} from '../orientation/server/accounts.js';
 import {baseline,config,course,fetchBytes,importFile,progress,released,roster,total} from '../orientation/server/course.js';
@@ -10,16 +11,20 @@ export async function handle(req,res,getDb=database){
   res.setHeader('Vary','Cookie');
   try {
     const op=req.query.op,method=req.method;
-    const allowed={state:'GET',login:'POST',activate:'POST',logout:'POST',course:'GET',media:'GET',progress:'POST',roster:'GET',manage:'POST',import:'POST'};
+    const allowed={state:'GET',login:'POST',activate:'POST',logout:'POST',course:'GET',media:'GET',progress:'POST',roster:'GET',manage:'POST',import:'POST',alerts:'POST'};
     requireValue(Object.hasOwn(allowed,op)&&allowed[op]===method,405,'Unsupported request.');
     if(method==='POST'){
       const host=req.headers.host;
-      requireValue(req.headers.origin==='https://'+host,403,'Open the Hueytown orientation page to continue.');
+      if(op!=='alerts')requireValue(req.headers.origin==='https://'+host,403,'Open the Hueytown orientation page to continue.');
       requireValue((req.headers['content-type']||'').startsWith('application/json'),415,'JSON required.');
     }
     const input=method==='POST'?(typeof req.body==='string'?JSON.parse(req.body):req.body)||{}:{};
     const token=(req.headers.cookie||'').split(';').map(c=>c.trim()).find(c=>c.startsWith(cookieName+'='))?.slice(cookieName.length+1);
     if(op==='state'&&!token)return send(res,200,{user:null});
+    if(op==='alerts'){
+      authorizeNotifier(req.headers.authorization);
+      return send(res,200,await completionAlerts(await getDb(),input));
+    }
     const db=await getDb();
     if(op==='import'){
       requireValue(typeof input.name==='string'&&typeof input.bytes==='string'&&input.bytes.length<=3000000,400,'Invalid file.');

@@ -72,6 +72,10 @@ export async function progress(db,email,input){
     }
     if(input.step<current)return {next:current,passed:true,explanation};
     await client.query('INSERT INTO orientation.activity(email,version,request_id,step,passed,response) VALUES($1,$2,$3,$4,$5,$6)',[email,version,input.id,input.step,passed,response]);
+    if(step.kind==='finish'){
+      await client.query(`INSERT INTO orientation.completion_alerts(id,email,version,completed_at)
+        VALUES ($1,$2,$3,now()) ON CONFLICT (email,version) DO NOTHING`,[input.id,email,version]);
+    }
     return {next:current+Number(passed),passed,explanation};
   });
 }

@@ -21,3 +21,13 @@ CREATE TABLE IF NOT EXISTS orientation.activity (
   PRIMARY KEY(email,version,request_id)
 );
 CREATE INDEX IF NOT EXISTS orientation_cursor ON orientation.activity(email,version,step) WHERE passed;
+
+CREATE TABLE IF NOT EXISTS orientation.completion_alerts (
+  id uuid PRIMARY KEY, email text NOT NULL, version text NOT NULL,
+  completed_at timestamptz NOT NULL, sent_at timestamptz,
+  UNIQUE (email, version)
+);
+INSERT INTO orientation.completion_alerts(id,email,version,completed_at)
+  SELECT DISTINCT ON (email,version) request_id,email,version,at
+  FROM orientation.activity WHERE version='2026-11-16.1' AND step=60 AND passed
+  ORDER BY email,version,at,request_id ON CONFLICT DO NOTHING;
