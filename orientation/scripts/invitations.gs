@@ -53,7 +53,7 @@ function connectInvitations() {
     wake = Utilities.getUuid() + Utilities.getUuid();
     props.setProperty('invitationWake', wake);
   }
-  const url = ScriptApp.getService().getUrl();
+  const url = 'https://script.google.com/macros/s/AKfycbyt0ByJFos5Ra2cu0rhkG7nFvolyqxo7vau3r3vZ05XLTMeyB9GdaIIV2k_c8X81QzYjw/exec';
   callCourse_({action: 'configureInvitations', url: url, wake: wake});
   console.log('Immediate invitation delivery connected.');
 }
