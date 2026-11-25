@@ -9,6 +9,16 @@
       "source": "/benefits/",
       "destination": "https://hueytown-team-care.agenttimblog.chatgpt.site/",
       "permanent": false
+    },
+    {
+      "source": "/orientation",
+      "destination": "https://hueytown-orientation.agenttimblog.chatgpt.site/",
+      "permanent": false
+    },
+    {
+      "source": "/orientation/",
+      "destination": "https://hueytown-orientation.agenttimblog.chatgpt.site/",
+      "permanent": false
     }
   ]
 }
